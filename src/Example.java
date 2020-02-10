@@ -19,6 +19,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.*;
+//TODO: Fix views drawing over each other
+//TODO: Fix orientation of side and front views
+//TODO: Implement resizing
 
 // OK this is not best practice - maybe you'd like to create
 // a volume data class?

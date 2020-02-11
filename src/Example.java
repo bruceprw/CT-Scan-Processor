@@ -19,6 +19,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.*;
+
+import static java.lang.Integer.max;
 //TODO: Fix views drawing over each other
 //TODO: Fix orientation of side and front views
 //TODO: Implement resizing
@@ -47,8 +49,8 @@ public class Example extends Application {
         int height = 256;
         WritableImage medical_image = new WritableImage(width, height);
         ImageView imageView = new ImageView(medical_image);
-
-
+        ImageView sideView = new ImageView(medical_image);
+        ImageView frontView = new ImageView(medical_image);
         Button mip_button = new Button("MIP"); //an example button to switch to MIP mode
         //sliders to step through the slices (z and y directions) (remember 113 slices in z direction 0-112)
         Label label = new Label("Select Layer:");
@@ -89,7 +91,7 @@ public class Example extends Application {
                         zSliderPos = newValue.intValue();
                         lz.setText("Z Layer: " + zSliderPos);
                         System.out.println(zSliderPos);
-                        MIP(medical_image);
+                        MIPTop(medical_image);
                     }
                 });
 
@@ -174,8 +176,44 @@ public class Example extends Application {
 		image.
     */
 
-
     public void MIP(WritableImage image) {
+        //Get image dimensions, and declare loop variables
+        int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
+        int maximum = 0;
+        PixelWriter image_writer = image.getPixelWriter();
+
+        float col;
+        short datum;
+        //Shows how to loop through each pixel and colour
+        //Try to always use j for loops in y, and i for loops in x
+        //as this makes the code more readable
+        for (j = 0; j < h; j++) {
+            for (i = 0; i < w; i++) {
+                //at this point (i,j) is a single pixel in the image
+                //here you would need to do something to (i,j) if the image size
+                //does not match the slice size (e.g. during an image resizing operation
+                //If you don't do this, your j,i could be outside the array bounds
+                //In the framework, the image is 256x256 and the data set slices are 256x256
+                //so I don't do anything - this also leaves you something to do for the assignment
+                for (k = 0; k < 113; k++) {
+                    maximum = max(cthead[k][j][i], maximum);
+                }
+                    datum = cthead[k][j][i];
+
+                    //calculate the colour by performing a mapping from [min,max] -> [0,255]
+                    col = (((float) datum - (float) min) / ((float) (maximum - min)));
+                    for (c = 0; c < 3; c++) {
+                        //and now we are looping through the bgr components of the pixel
+                        //set the colour component c of pixel (i,j)
+                        image_writer.setColor(i, j, Color.color(col, col, col, 1.0));
+                        //					data[c+3*i+3*j*w]=(byte) col;
+                    } // colour loop
+                } // column loop
+            } // row loop
+        }
+
+
+    public void MIPTop(WritableImage image) {
         //Get image dimensions, and declare loop variables
         int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
         PixelWriter image_writer = image.getPixelWriter();
@@ -255,7 +293,30 @@ public class Example extends Application {
         } // row loop
 
     }
+    public void nearestNeighbour(WritableImage image, float w2, float h2) {
+        WritableImage image2;
+        double w1 = image.getWidth();
+        double h1 = image.getWidth();
+        double x;
+        double y;
+        int i;
+        int j;
+        int c;
 
+        for (j=0; j<h2; j++) {
+            for (i=0; i<w2; i++) {
+                for (c=0; c<3; c++) {
+                    y = (j*h1/h2);
+                    x = (i*w1/w2);
+                    int w2i = (int) w2;
+                    int h2i = (int) (h2);
+                    image2 = new WritableImage(w2i, h2i);
+                   // image2[j][i][c] = image[h1][w1][c];
+                }
+            }
+        }
+
+    }
     public static void main(String[] args) {
         launch();
     }

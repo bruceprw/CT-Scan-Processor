@@ -21,7 +21,7 @@ import javafx.stage.Stage;
 import java.io.*;
 
 import static java.lang.Integer.max;
-//TODO: Fix views drawing over each other
+
 //TODO: Fix orientation of side and front views
 //TODO: Implement resizing
 
@@ -48,9 +48,12 @@ public class Example extends Application {
         int width = 256;
         int height = 256;
         WritableImage medical_image = new WritableImage(width, height);
+        WritableImage medical_image_top = new WritableImage(width, height);
+        WritableImage medical_image_side = new WritableImage(width, height);
+        WritableImage medical_image_front = new WritableImage(width, height);
         ImageView imageView = new ImageView(medical_image);
-        ImageView sideView = new ImageView(medical_image);
-        ImageView frontView = new ImageView(medical_image);
+        ImageView sideView = new ImageView(medical_image_side);
+        ImageView frontView = new ImageView(medical_image_front);
         Button mip_button = new Button("MIP"); //an example button to switch to MIP mode
         //sliders to step through the slices (z and y directions) (remember 113 slices in z direction 0-112)
         Label label = new Label("Select Layer:");
@@ -102,7 +105,7 @@ public class Example extends Application {
                         ySliderPos = newValue.intValue();
                         ly.setText("Y Layer: " + ySliderPos);
                         System.out.println(ySliderPos);
-                        MIPSide(medical_image);
+                        MIPSide(medical_image_side);
                     }
                 });
 
@@ -113,7 +116,7 @@ public class Example extends Application {
                         xSliderPos = newValue.intValue();
                         lx.setText("X Layer: " + xSliderPos);
                         System.out.println(xSliderPos);
-                        MIPFront(medical_image);
+                        MIPFront(medical_image_front);
                     }
                 });
 
@@ -125,7 +128,7 @@ public class Example extends Application {
         root.setStyle(style);
         //https://examples.javacodegeeks.com/desktop-java/javafx/scene/image-scene/javafx-image-example/
         root.setOrientation(Orientation.VERTICAL);
-        root.getChildren().addAll(imageView, mip_button, fileSelect, zslider, lz, yslider, ly, xslider, lx);
+        root.getChildren().addAll(imageView, sideView, frontView, mip_button, fileSelect, zslider, lz, yslider, ly, xslider, lx);
 
 		Scene scene = new Scene(root, 640, 480);
         stage.setScene(scene);
@@ -198,14 +201,14 @@ public class Example extends Application {
                 for (k = 0; k < 113; k++) {
                     maximum = max(cthead[k][j][i], maximum);
                 }
-                    datum = cthead[k][j][i];
+                   //TODO: datum = cthead[k][j][i];
 
                     //calculate the colour by performing a mapping from [min,max] -> [0,255]
-                    col = (((float) datum - (float) min) / ((float) (maximum - min)));
+                    //TODO:col = (((float) datum - (float) min) / ((float) (maximum - min)));
                     for (c = 0; c < 3; c++) {
                         //and now we are looping through the bgr components of the pixel
                         //set the colour component c of pixel (i,j)
-                        image_writer.setColor(i, j, Color.color(col, col, col, 1.0));
+                        //TODO:image_writer.setColor(i, j, Color.color(col, col, col, 1.0));
                         //					data[c+3*i+3*j*w]=(byte) col;
                     } // colour loop
                 } // column loop

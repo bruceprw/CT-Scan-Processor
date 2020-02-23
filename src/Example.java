@@ -13,6 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -54,7 +55,10 @@ public class Example extends Application {
         ImageView imageView = new ImageView(medical_image);
         ImageView sideView = new ImageView(medical_image_side);
         ImageView frontView = new ImageView(medical_image_front);
-        Button mip_button = new Button("MIP"); //an example button to switch to MIP mode
+        Button mip_button_top = new Button("MIP Top"); //an example button to switch to MIP mode
+        Button mip_button_side = new Button("MIP Side"); //an example button to switch to MIP mode
+        Button mip_button_front = new Button("MIP Front"); //an example button to switch to MIP mode
+
         //sliders to step through the slices (z and y directions) (remember 113 slices in z direction 0-112)
         Label label = new Label("Select Layer:");
         Slider zslider = new Slider(0, 112, 0);
@@ -65,14 +69,28 @@ public class Example extends Application {
         Slider yslider = new Slider(0, 255, 0);
         Label ly = new Label();
 
-        Slider xslider = new Slider(0, 112, 0);
+        Slider xslider = new Slider(0, 255, 0);
         Label lx = new Label();
 
 
-        mip_button.setOnAction(new EventHandler<ActionEvent>() {
+        mip_button_top.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                MIP(medical_image);
+                MIPButtonTop(medical_image);
+            }
+        });
+
+        mip_button_side.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                MIPButtonSide(medical_image_side);
+            }
+        });
+
+        mip_button_front.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                MIPButtonFront(medical_image_front);
             }
         });
 
@@ -121,16 +139,27 @@ public class Example extends Application {
                 });
 
 
-        FlowPane root = new FlowPane();
-        root.setVgap(10);
-        root.setHgap(5);
+        GridPane grid = new GridPane();
+        grid.setVgap(10);
+        grid.setHgap(5);
         String style = "-fx-background-color: rgba(85,178,255,0.8);";
-        root.setStyle(style);
-        //https://examples.javacodegeeks.com/desktop-java/javafx/scene/image-scene/javafx-image-example/
-        root.setOrientation(Orientation.VERTICAL);
-        root.getChildren().addAll(imageView, sideView, frontView, mip_button, fileSelect, zslider, lz, yslider, ly, xslider, lx);
+        grid.setStyle(style);
 
-		Scene scene = new Scene(root, 640, 480);
+        grid.add(imageView, 0, 0);
+        grid.add(sideView, 1, 0);
+        grid.add(frontView, 2, 0);
+        grid.add(zslider, 0, 1);
+        grid.add(lz, 0, 2);
+        grid.add(yslider, 1,1);
+        grid.add(ly,1,2);
+        grid.add(xslider,2,1);
+        grid.add(lx,2,2);
+        grid.add(mip_button_top,0,3);
+        grid.add(mip_button_side,1,3);
+        grid.add(mip_button_front,2,3);
+        grid.add(fileSelect, 1, 4);
+
+		Scene scene = new Scene(grid, 960, 540);
         stage.setScene(scene);
         stage.show();
     }
@@ -179,14 +208,14 @@ public class Example extends Application {
 		image.
     */
 
-    public void MIP(WritableImage image) {
+    public void MIPButtonTop(WritableImage image) {
         //Get image dimensions, and declare loop variables
         int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
         int maximum = 0;
         PixelWriter image_writer = image.getPixelWriter();
 
         float col;
-        short datum;
+        int datum;
         //Shows how to loop through each pixel and colour
         //Try to always use j for loops in y, and i for loops in x
         //as this makes the code more readable
@@ -198,22 +227,26 @@ public class Example extends Application {
                 //If you don't do this, your j,i could be outside the array bounds
                 //In the framework, the image is 256x256 and the data set slices are 256x256
                 //so I don't do anything - this also leaves you something to do for the assignment
-                for (k = 0; k < 113; k++) {
+                maximum=-1117;
+                for (k = 0; k < 112; k++) {
                     maximum = max(cthead[k][j][i], maximum);
                 }
-                   //TODO: datum = cthead[k][j][i];
+                   datum = maximum;
 
                     //calculate the colour by performing a mapping from [min,max] -> [0,255]
-                    //TODO:col = (((float) datum - (float) min) / ((float) (maximum - min)));
+                    col = (((float) datum - (float) min) / ((float) (max - min)));
                     for (c = 0; c < 3; c++) {
                         //and now we are looping through the bgr components of the pixel
                         //set the colour component c of pixel (i,j)
-                        //TODO:image_writer.setColor(i, j, Color.color(col, col, col, 1.0));
+                        image_writer.setColor(i, j, Color.color(col, col, col, 1.0));
                         //					data[c+3*i+3*j*w]=(byte) col;
                     } // colour loop
                 } // column loop
             } // row loop
         }
+
+
+
 
 
     public void MIPTop(WritableImage image) {
@@ -247,6 +280,43 @@ public class Example extends Application {
         } // row loop
     }
 
+    public void MIPButtonSide(WritableImage image) {
+        //Get image dimensions, and declare loop variables
+        int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
+        int maximum = 0;
+        PixelWriter image_writer = image.getPixelWriter();
+
+        float col;
+        int datum;
+        //Shows how to loop through each pixel and colour
+        //Try to always use j for loops in y, and i for loops in x
+        //as this makes the code more readable
+        for (j = 0; j < 112; j++) {
+            for (i = 0; i < w; i++) {
+                //at this point (i,j) is a single pixel in the image
+                //here you would need to do something to (i,j) if the image size
+                //does not match the slice size (e.g. during an image resizing operation
+                //If you don't do this, your j,i could be outside the array bounds
+                //In the framework, the image is 256x256 and the data set slices are 256x256
+                //so I don't do anything - this also leaves you something to do for the assignment
+                maximum=-1117;
+                for (k = 0; k < h; k++) {
+                    maximum = max(cthead[j][i][k], maximum);
+                }
+                datum = maximum;
+
+                //calculate the colour by performing a mapping from [min,max] -> [0,255]
+                col = (((float) datum - (float) min) / ((float) (max - min)));
+                for (c = 0; c < 3; c++) {
+                    //and now we are looping through the bgr components of the pixel
+                    //set the colour component c of pixel (i,j)
+                    image_writer.setColor(i, j, Color.color(col, col, col, 1.0));
+                    //					data[c+3*i+3*j*w]=(byte) col;
+                } // colour loop
+            } // column loop
+        } // row loop
+    }
+
 
     public void MIPSide(WritableImage image) {
         int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
@@ -255,7 +325,7 @@ public class Example extends Application {
         float col;
         short datum;
 
-        for (j = 0; j < 113; j++) {
+        for (j = 0; j < 112; j++) {
             for (i = 0; i < w; i++) {
 
                 datum = cthead[j][i][ySliderPos];
@@ -264,7 +334,7 @@ public class Example extends Application {
                 for (c = 0; c < 3; c++) {
                     //and now we are looping through the bgr components of the pixel
                     //set the colour component c of pixel (i,j)
-                    image_writer.setColor(j, i, Color.color(col, col, col, 1.0));
+                    image_writer.setColor(i, j, Color.color(col, col, col, 1.0));
                     //					data[c+3*i+3*j*w]=(byte) col;
                 } // colour loop
             } // column loop
@@ -272,6 +342,43 @@ public class Example extends Application {
 
     }
 
+
+    public void MIPButtonFront(WritableImage image) {
+        //Get image dimensions, and declare loop variables
+        int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
+        int maximum = 0;
+        PixelWriter image_writer = image.getPixelWriter();
+
+        float col;
+        int datum;
+        //Shows how to loop through each pixel and colour
+        //Try to always use j for loops in y, and i for loops in x
+        //as this makes the code more readable
+        for (j = 0; j < 112; j++) {
+            for (i = 0; i < w; i++) {
+                //at this point (i,j) is a single pixel in the image
+                //here you would need to do something to (i,j) if the image size
+                //does not match the slice size (e.g. during an image resizing operation
+                //If you don't do this, your j,i could be outside the array bounds
+                //In the framework, the image is 256x256 and the data set slices are 256x256
+                //so I don't do anything - this also leaves you something to do for the assignment
+                maximum=-1117;
+                for (k = 0; k < h; k++) {
+                    maximum = max(cthead[j][k][i], maximum);
+                }
+                datum = maximum;
+
+                //calculate the colour by performing a mapping from [min,max] -> [0,255]
+                col = (((float) datum - (float) min) / ((float) (max - min)));
+                for (c = 0; c < 3; c++) {
+                    //and now we are looping through the bgr components of the pixel
+                    //set the colour component c of pixel (i,j)
+                    image_writer.setColor(i, j, Color.color(col, col, col, 1.0));
+                    //					data[c+3*i+3*j*w]=(byte) col;
+                } // colour loop
+            } // column loop
+        } // row loop
+    }
 
     public void MIPFront(WritableImage image) {
         int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
@@ -289,7 +396,7 @@ public class Example extends Application {
                 for (c = 0; c < 3; c++) {
                     //and now we are looping through the bgr components of the pixel
                     //set the colour component c of pixel (i,j)
-                    image_writer.setColor(j, i, Color.color(col, col, col, 1.0));
+                    image_writer.setColor(i, j, Color.color(col, col, col, 1.0));
                     //					data[c+3*i+3*j*w]=(byte) col;
                 } // colour loop
             } // column loop

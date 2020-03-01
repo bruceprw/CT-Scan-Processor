@@ -9,6 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
@@ -17,6 +18,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 
 import java.io.*;
@@ -36,6 +38,7 @@ public class Example extends Application {
     private int zSliderPos;
     private int ySliderPos;
     private int xSliderPos;
+    private int rSliderPos;
     private String imgPath = "/Users/bruceprw/IdeaProjects/CS-255-Assignment/src/CThead.raw";
 
     @Override
@@ -58,7 +61,8 @@ public class Example extends Application {
         Button mip_button_top = new Button("MIP Top"); //an example button to switch to MIP mode
         Button mip_button_side = new Button("MIP Side"); //an example button to switch to MIP mode
         Button mip_button_front = new Button("MIP Front"); //an example button to switch to MIP mode
-
+        Button resizeButton = new Button("Resize");
+        Popup resizeMenu = new Popup();
         //sliders to step through the slices (z and y directions) (remember 113 slices in z direction 0-112)
         Label label = new Label("Select Layer:");
         Slider zslider = new Slider(0, 112, 0);
@@ -138,8 +142,33 @@ public class Example extends Application {
                     }
                 });
 
+        Label resizeLabel = new Label();
+        Slider resizeSlider = new Slider(0,10,1);
+        resizeMenu.getContent().add(resizeLabel);
+        resizeMenu.getContent().add(resizeSlider);
 
-        GridPane grid = new GridPane();
+        resizeButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+               if (!resizeMenu.isShowing())
+                   resizeMenu.show(stage);
+
+               else
+                   resizeMenu.hide();
+            }
+        });
+
+        resizeSlider.valueProperty().addListener(
+                new ChangeListener<Number>() {
+                    public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                        rSliderPos = newValue.intValue();
+                        resizeLabel.setText("Scale factor: " + rSliderPos);
+                        nearestNeighbour(medical_image_front, rSliderPos);
+                    }
+                });
+
+
+                GridPane grid = new GridPane();
         grid.setVgap(10);
         grid.setHgap(5);
         String style = "-fx-background-color: rgba(85,178,255,0.8);";
@@ -158,6 +187,9 @@ public class Example extends Application {
         grid.add(mip_button_side,1,3);
         grid.add(mip_button_front,2,3);
         grid.add(fileSelect, 1, 4);
+        grid.add(resizeButton, 2, 4);
+        grid.add(resizeSlider, 2, 5);
+        grid.add(resizeLabel, 2, 6);
 
 		Scene scene = new Scene(grid, 960, 540);
         stage.setScene(scene);
@@ -403,28 +435,47 @@ public class Example extends Application {
         } // row loop
 
     }
-    public void nearestNeighbour(WritableImage image, float w2, float h2) {
-        WritableImage image2;
-        double w1 = image.getWidth();
-        double h1 = image.getWidth();
-        double x;
-        double y;
-        int i;
-        int j;
-        int c;
+
+    public void thumbnails(WritableImage image) {
+        
+
+    }
+
+    public void nearestNeighbour(WritableImage image, int factor) {
+        float w1 = (float) image.getWidth();
+        float h1 = (float) image.getWidth();
+        float w2 = (w1*factor);
+        float h2 = (h1*factor);
+
+        WritableImage image2 = new WritableImage((int)w2, (int)h2);
+        PixelWriter image_writer = image.getPixelWriter();
+
+
+        float x;
+        float y;
+        short datum;
+        int i = 0;
+        int j = 0;
+        float col = 0;
+        Color tempCol;
+
+
+
 
         for (j=0; j<h2; j++) {
             for (i=0; i<w2; i++) {
-                for (c=0; c<3; c++) {
-                    y = (j*h1/h2);
-                    x = (i*w1/w2);
-                    int w2i = (int) w2;
-                    int h2i = (int) (h2);
-                    image2 = new WritableImage(w2i, h2i);
-                   // image2[j][i][c] = image[h1][w1][c];
-                }
+                y = (j*h1/h2);
+                x = (i*w1/w2);
+                tempCol = image.getPixelReader().getColor((int)x,(int)y);
+                image2.getPixelWriter().setColor(i,j,tempCol);
+
+
             }
         }
+
+
+
+
 
     }
     public static void main(String[] args) {

@@ -1,3 +1,8 @@
+/**
+ * @author Bruce Williams (972648)
+ * All code is my own.
+ */
+
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -5,11 +10,10 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
@@ -25,12 +29,10 @@ import java.io.*;
 
 import static java.lang.Integer.max;
 
-//TODO: Fix orientation of side and front views
-//TODO: Implement resizing
 
-// OK this is not best practice - maybe you'd like to create
-// a volume data class?
-// I won't give extra marks for that though.
+
+
+
 
 public class Example extends Application {
     short cthead[][][]; //store the 3D volume data set
@@ -64,7 +66,7 @@ public class Example extends Application {
         Button mip_button_top = new Button("MIP Top"); //an example button to switch to MIP mode
         Button mip_button_side = new Button("MIP Side"); //an example button to switch to MIP mode
         Button mip_button_front = new Button("MIP Front"); //an example button to switch to MIP mode
-        Button resizeButton = new Button("Resize");
+        Button resizeButton = new Button("Resize(up to 2x)");
         Popup resizeMenu = new Popup();
         //sliders to step through the slices (z and y directions) (remember 113 slices in z direction 0-112)
         Label label = new Label("Select Layer:");
@@ -81,11 +83,19 @@ public class Example extends Application {
 
         Button back = new Button("<- Back");
 
+
+
         GridPane grid = new GridPane();
         Scene scene = new Scene(grid, 960, 540);
 
         GridPane resizeGrid = new GridPane();
         Scene resizeWindow = new Scene(resizeGrid,960,540);
+
+
+
+
+
+
 
         mip_button_top.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -163,6 +173,8 @@ public class Example extends Application {
 
 
 
+
+
         Label resizeLabel = new Label();
 
         Label nnInputLabel = new Label("Enter resize factor");
@@ -175,30 +187,30 @@ public class Example extends Application {
         resizeMenu.getContent().add(resizeLabel);
         resizeMenu.getContent().add(resizeSlider);
 
+
         resizeButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-               stage.setScene(resizeWindow);
-                nnFactor = Float.parseFloat(nnInput.getText());
-                WritableImage medical_image_resize = new WritableImage((int) (width*nnFactor), (int) (height*nnFactor));
-                ImageView resizeView = new ImageView(medical_image_resize);
-                resizeGrid.add(resizeView,1,1);
-                //imageView.setFitWidth(width*nnFactor);
-                //imageView.setFitHeight(height*nnFactor);
-                MIPButtonTop(nearestNeighbour(medical_image_resize,nnFactor));
+               //stage.setScene(resizeWindow);
+               nnFactor = Float.parseFloat(nnInput.getText());
+               if (nnFactor > 2) {
+                   nnFactor=2;
+               }
+                Rectangle2D viewRectangle = new Rectangle2D(1,1,width*nnFactor,height*nnFactor);
+               WritableImage medical_image_resize = new WritableImage((int) (width*nnFactor), (int) (height*nnFactor));
+               ImageView resizeView = new ImageView(medical_image_resize);
+
+               resizeGrid.add(resizeView,1,1);
+               imageView.setFitWidth(width*nnFactor);
+               //imageView.setViewport(viewRectangle);
+               imageView.setFitHeight(height*nnFactor);
+               sideView.setFitWidth(width*nnFactor);
+               sideView.setFitHeight(height*nnFactor);
+               frontView.setFitWidth(width*nnFactor);
+               frontView.setFitHeight(height*nnFactor);
+               //nearestNeighbour(medical_image_resize,nnFactor);
             }
         });
-            /*
-        resizeSlider.valueProperty().addListener(
-                new ChangeListener<Number>() {
-                    public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                        rSliderPos = newValue.intValue();
-                        nnFactor = rSliderPos;
-                        resizeLabel.setText("Scale factor: " + nnFactor);
-                        nearestNeighbour(medical_image, nnFactor);
-                    }
-                });
-            */
 
         String style = "-fx-background-color: rgba(85,178,255,0.8);";
 
@@ -227,11 +239,11 @@ public class Example extends Application {
         grid.add(mip_button_side,1,3);
         grid.add(mip_button_front,2,3);
         grid.add(fileSelect, 1, 4);
-        grid.add(resizeButton, 0, 4);
-       // grid.add(resizeSlider, 0, 5);
+        grid.add(resizeButton, 1, 8);
         grid.add(resizeLabel, 0, 6);
         grid.add(nnInputLabel,0,7);
         grid.add(nnInput,1,7);
+       // grid.add(sp,5,0);
 
 
         stage.setScene(scene);
@@ -274,7 +286,7 @@ public class Example extends Application {
         //therefore histogram equalization would be a good thing
     }
 
-	
+
 	 /*
         This function shows how to carry out an operation on an image.
         It obtains the dimensions of the image, and then loops through
@@ -282,6 +294,10 @@ public class Example extends Application {
 		image.
     */
 
+    /**
+     * Maximum intensity projection from the top down view.
+     * @param image source image.
+     */
     public void MIPButtonTop(WritableImage image) {
         //Get image dimensions, and declare loop variables
         int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
@@ -321,9 +337,10 @@ public class Example extends Application {
         }
 
 
-
-
-
+    /**
+     * Displays slices from the top view.
+     * @param image source image.
+     */
     public void MIPTop(WritableImage image) {
         //Get image dimensions, and declare loop variables
         int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
@@ -355,6 +372,10 @@ public class Example extends Application {
         } // row loop
     }
 
+    /**
+     * MIP from side view.
+     * @param image source image.
+     */
     public void MIPButtonSide(WritableImage image) {
         //Get image dimensions, and declare loop variables
         int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
@@ -392,7 +413,10 @@ public class Example extends Application {
         } // row loop
     }
 
-
+    /**
+     * Slices from side view.
+     * @param image source image.
+     */
     public void MIPSide(WritableImage image) {
         int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
         PixelWriter image_writer = image.getPixelWriter();
@@ -417,7 +441,10 @@ public class Example extends Application {
 
     }
 
-
+    /**
+     * MIP from front view.
+     * @param image source image.
+     */
     public void MIPButtonFront(WritableImage image) {
         //Get image dimensions, and declare loop variables
         int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
@@ -455,6 +482,10 @@ public class Example extends Application {
         } // row loop
     }
 
+    /**
+     * Slices from front view.
+     * @param image source image.
+     */
     public void MIPFront(WritableImage image) {
         int w = (int) image.getWidth(), h = (int) image.getHeight(), i, j, c, k;
         PixelWriter image_writer = image.getPixelWriter();
@@ -479,11 +510,14 @@ public class Example extends Application {
 
     }
 
-    public void thumbnails(WritableImage image) {
 
 
-    }
-
+    /**
+     * Carries out nearest neighbour resizing on an image.
+     * @param image source image.
+     * @param factor factor that the image will be resized by.
+     * @return image2 the resized image.
+     */
     public WritableImage nearestNeighbour(WritableImage image, float factor) {
         float w1 = (float) image.getWidth();
         float h1 = (float) image.getWidth();
@@ -514,6 +548,7 @@ public class Example extends Application {
 
             }
         }
+
 
 
         return image2;
